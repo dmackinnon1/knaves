@@ -61,20 +61,27 @@ class Islanders {
 		}
 		statements = pruneStatements(statements);
 		statements = joinConnectedSets(this.islanders, statements);
-		return statements;
+		//chose a random match statement
+		var source = randomElement(this.islanders);
+		var remainders = arrayWithoutElement(this.islanders,source);
+		var target = randomElement(remainders);
+		statements.push(source.matchStatementFor(target));
+		return shuffle(statements);
 	}
 
-	clue() {
-		if (this.count/2 === this.liarCount) {
-			return this.knaves[0].name + " is a knave. There numbers of knights and knaves are equal.";
-		}
-		return "There are " + this.liarCount + " knaves in this group.";
-	}
 }
 
 class Islander {
 	constructor (n) {
 		this.name = n;
+	}
+
+	matchStatementFor(i) {
+		if (i.isKnight()) {
+			return new Sympathetic(this, i);
+		} else {
+			return new Antithetic(this, i);
+		}
 	}
 }
 
@@ -90,6 +97,10 @@ class Knave extends Islander {
 			return new Affirmation(this, i);
 		}
 	}
+
+	compoundStatementFor(i) {
+		return Joint(this, i);
+	}
 }
 
 class Knight extends Islander {
@@ -103,6 +114,10 @@ class Knight extends Islander {
 		} else {
 			return new Accusation(this, i);
 		}
+	}
+
+	compoundStatementFor(i) {
+		return DisJoint(this, i);
 	}
 }
 
@@ -130,7 +145,7 @@ class Accusation extends Statement {
 			" lies",
 			" is untruthful"		
 		];
-		this.text = this.target.name + options[randomRange(0,options.length -1)];
+		this.text = this.target.name + randomElement(options);
 		return this.text;		
 	}	
 }
@@ -144,11 +159,56 @@ class Affirmation extends Statement {
 			" never lies",
 			" tells the truth"
 		];
-		this.text = this.target.name + options[randomRange(0,options.length -1)];
+		this.text = this.target.name + randomElement(options);
 		return this.text;		
 	}
 }
 
+class Sympathetic extends Statement {
+	buildStatement() {
+		var options = [
+			" is my type"
+		];
+		this.text = this.target.name + randomElement(options);
+		return this.text;
+	}
+}
+
+class Antithetic extends Statement {
+	buildStatement() {
+		var options = [
+			" is not my type"
+		];
+		this.text = this.target.name + randomElement(options);
+		return this.text;
+	}	
+}
+
+class Disjoint extends Statement {
+	buildStatement() {
+		this.text = this.target.name;
+		if (this.source.isKnight) {
+			this.text += " is a knight ";
+		} else {
+			this.text += " is a knave ";
+		}
+		this.text = "or I am a knave"
+		return this.text;		
+	}
+}
+
+class Joint extends Statement {
+	buildStatement() {
+		this.text = this.target.name;
+		if (this.source.isKnight) {
+			this.text += " is a knave ";
+		} else {
+			this.text += " is a knight ";
+		}
+		this.text = "and I am a knave too";
+		return this.text;		
+	}
+}
 
 /**
 * Controlers
@@ -176,10 +236,6 @@ class IslanderController {
 class IslandControllers {
 	constructor(island) {
 		this.island = island;
-	}
-
-	clueDisplay() {
-		return this.island.clue();
 	}
 
 	accusationDisplay() {

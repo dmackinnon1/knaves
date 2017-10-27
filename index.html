@@ -79,8 +79,6 @@ ul {
 		islandersDisplay.innerHTML = controller.islandersDisplay();
 		var accusationDisplay = document.getElementById("accusationDisplay");
 		accusationDisplay.innerHTML = controller.accusationDisplay();
-		var clueDisplay = document.getElementById("clueDisplay");
-		clueDisplay.innerHTML = "A clue: " + controller.clueDisplay();
 		var solutionDisplay = document.getElementById("solutionDisplay");
 		solutionDisplay.innerHTML = "";	
 		knavesList = [];
@@ -160,8 +158,6 @@ or a Knight. Knights always tell the truth, and Knaves always lie. You have enco
 <h3>
 <div id="accusationDisplay"></div>	
 <hr>
-<div id="clueDisplay"></div>
-</h3>
 <br>
 <p>
 Next to the name of each islander, check off the ones that you think are knaves. When you think you have the correct list, click the 'solve' button to see if have solved the puzzle.
