@@ -299,46 +299,14 @@ class Statement {
 		return fs;
 	}
 
-	description() {
-		return "none";
-	}
 }
 
+class TypeStatement extends Statement {
 
-class Accusation extends Statement {	
-	buildStatement() {
-		var options = [
-			" is lying",
-			" is a knave",
-			" always lies",
-			" never tells the truth",
-			" lies",
-			" is untruthful"		
-		];
-		this.text = this.target.name + randomElement(options);
-		return this.text;		
-	}	
-
-	description(){
-		return "accusation";
-	}
-
-	reasoning(known){
-		var islanders = [];
-		islanders.push(this.source);
-		islanders.push(this.target);
-		islanders = removeElement(islanders, known);
-		var unknown = islanders[0];
-		var s = "A knight or knave will call the opposite type a knave." +
-			" When a knight does this, they are telling the truth, when a knave does it they are lying. ";
-		s += "So from this we know that "
-		s += this.target + " and " + this.source + " are opposite types. "; 
-		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type(); 
-		return s;
-	}
-
-	solve(solver) {
-		solver.accusations.push(this);
+	done(solver) {
+		var hasTarget = arrayContains(solver.knights,this.target) || arrayContains(solver.knaves,this.target);
+		var hasSource = arrayContains(solver.knights,this.source) || arrayContains(solver.knaves,this.source);  
+		return hasTarget && hasSource;
 	}
 
 	process(known, solver) {
@@ -357,15 +325,42 @@ class Accusation extends Statement {
 		}
 	}
 
-	done(solver) {
-		var hasTarget = arrayContains(solver.knights,this.target) || arrayContains(solver.knaves,this.target);
-		var hasSource = arrayContains(solver.knights,this.source) || arrayContains(solver.knaves,this.source);  
-		return hasTarget && hasSource;
+	solve(solver) {
+		solver.typeStatements.push(this);
 	}
-
 }
 
-class Affirmation extends Statement {
+class Accusation extends TypeStatement {	
+	buildStatement() {
+		var options = [
+			" is lying",
+			" is a knave",
+			" always lies",
+			" never tells the truth",
+			" lies",
+			" is untruthful"		
+		];
+		this.text = this.target.name + randomElement(options);
+		return this.text;		
+	}	
+
+	reasoning(known){
+		var islanders = [];
+		islanders.push(this.source);
+		islanders.push(this.target);
+		islanders = removeElement(islanders, known);
+		var unknown = islanders[0];
+		var s = "A knight or knave will call the opposite type a knave." +
+			" When a knight does this, they are telling the truth, when a knave does it they are lying. ";
+		s += "So from this we know that "
+		s += this.target + " and " + this.source + " are opposite types. "; 
+		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type(); 
+		return s;
+	}
+	
+}
+
+class Affirmation extends TypeStatement {
 	buildStatement() {
 		var options = [
 			" is truthful",
@@ -376,10 +371,6 @@ class Affirmation extends Statement {
 		];
 		this.text = this.target.name + randomElement(options);
 		return this.text;		
-	}
-
-	description(){
-		return "affirmation";
 	}
 
 	reasoning(known){
@@ -395,34 +386,6 @@ class Affirmation extends Statement {
 		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type(); 
 		return s;
 	}
-
-	solve(solver) {
-		solver.affirmations.push(this);
-	}
-
-	process(known, solver) {
-		if (this.source == known || this.target == known){
-			var islanders = [];
-			islanders.push(this.source);
-			islanders.push(this.target);
-			islanders = removeElement(islanders, known);
-			var unknown = islanders[0];
-			solver.reasoning.push(this.reasoning(known));
-			if (unknown.isKnight()) {
-				addUnique(solver.knights,unknown);
-			} else {
-				addUnique(solver.knaves,unknown);
-			}
-		}
-	}
-
-	done(solver) {
-		var hasTarget = arrayContains(solver.knights,this.target) || arrayContains(solver.knaves,this.target);
-		var hasSource = arrayContains(solver.knights,this.source) || arrayContains(solver.knaves,this.source);  
-		return hasTarget && hasSource;
-	}
-
-
 }
 
 class Sympathetic extends Statement {
@@ -432,9 +395,6 @@ class Sympathetic extends Statement {
 		];
 		this.text = this.target.name + randomElement(options);
 		return this.text;
-	}
-	description(){
-		return "sympathetic";
 	}
 
 	reasoning(){
@@ -458,10 +418,6 @@ class Antithetic extends Statement {
 		this.text = this.target.name + randomElement(options);
 		return this.text;
 	}	
-
-	description(){
-		return "antithetic";
-	}
 
 	reasoning(){
 		var s = "Both knights and knaves will say they are not the same type as a knave.";
@@ -487,17 +443,15 @@ class Disjoint extends Statement {
 		this.text += "or I am a knave"
 		return this.text;		
 	}
-	description(){
-		return "disjoint";
-	}
 
 	reasoning(){
-		var s = "When " + this.source + " said '"+ this.text +"'";
-		s += ", we know this is not a false statement (if it was false, this would make the speaker a knave, which would make the statment true)."
+		var s = "When " + this.source + " said '"+ this.text +",'";
+		s += " we know this is not a false statement (if it was false, this would make the speaker a knave, which would make the statment true)."
 		s += " So, " + this.source + " is a knight and " + this.target;
 		s += " is a " + this.target.type() +".";
 		return s;			
 	}
+	
 	solve(solver) {
 		solver.reasoning.push(this.reasoning());
 		
@@ -521,14 +475,10 @@ class Joint extends Statement {
 		this.text += "and I am a knave";
 		return this.text;		
 	}
-	
-	description() {
-		return "joint";
-	}
 
 	reasoning(){
-		var s = "Because " + this.source + " said '"+ this.text +",;";
-		s += ", we know they are not making a true statement (if it was true, the speaker would be a knave, making the statmeent false)."; 
+		var s = "Because " + this.source + " said '"+ this.text +",'";
+		s += " we know they are not making a true statement (if it was true, the speaker would be a knave, making the statmeent false)."; 
 		s += " Therefore, " + this.source + " is a knave and ";
 		if (this.target.isKnight()) {
 			s += " is a knight.";
@@ -553,8 +503,7 @@ class Solver {
 	constructor(puzzle) {
 		this.puzzle = puzzle;
 		this.reasoning = [];
-		this.accusations = [];
-		this.affirmations = [];
+		this.typeStatements = [];
 		this.knights = [];
 		this.knaves = [];
 	}
@@ -567,9 +516,8 @@ class Solver {
 			statement.solve(this);
 		}
 		
-		var remainingStatements = copyArray(this.affirmations);
-		remainingStatements = addAllUnique(remainingStatements, this.accusations);
-
+		var remainingStatements = copyArray(this.typeStatements);
+	
 		while(remainingStatements.length !== 0) {
 			var nextRemaining = copyArray(remainingStatements);
 			var y;
