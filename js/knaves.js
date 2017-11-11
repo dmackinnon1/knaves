@@ -13,32 +13,33 @@ var originalNameSet = ["Alice", "Bob", "Carol", "Dave",
 	"Zelda"];
 
 var nameSet; //to do, move to Islanders scope
-class Islanders {
 
-	constructor(count) {
+class Puzzle {
 
-		this.count = count;
-		this.liarCount = randomRange(Math.floor(count/2)-1, count-2);
-		this.knaves = [];
-		this.knights = [];
-		this.islanders = [];
+	constructor() {
+		this.islanders = null;
+		this.statements = null;
+		this.islanderControllers = null;
+	}
+
+	getIslanders() {
+		return this.islanders;
+	}
+	
+	getStatements() {
+		return this.statements;
+	}
+
+	getControllers() {
+		return this.islanderControllers;
+	}
+
+	resetIslanderControllers(){
 		this.islanderControllers = {};
-		nameSet = copyArray(originalNameSet);
-		for (var i=0; i < this.liarCount; i++) {
-			var pos = randomRange(0, nameSet.length -1);
-			var islander = new Knave(nameSet.splice(pos, 1)[0]);
-			this.knaves.push(islander);
-			this.islanderControllers[islander.name] = new IslanderController(islander);
+		var k = null;
+		for (k in this.islanders) {
+			this.islanderControllers[this.islanders[k].name] = new IslanderController(this.islanders[k]);		
 		}
-
-		for (var i = this.liarCount; i <this.count; i++) {
-			var pos = randomRange(0, nameSet.length -1);
-			var islander = new Knight(nameSet.splice(pos, 1)[0]);
-			this.knights.push(islander);
-			this.islanderControllers[islander.name] = new IslanderController(islander);
-		}
-		this.islanders = shuffle(this.knaves.concat(this.knights));
-		this.statements = this.generateStatements();
 	}
 
 	knaveNames() {
@@ -50,23 +51,176 @@ class Islanders {
 		return list;
 	}
 
+	toString() {
+		return "Puzzle islanders [" + prettyPrintList(this.islanders) + "] knaves: [" 
+			+ prettyPrintList(this.knaveNames()) +"]";
+	}
+}
+
+class CompoundPuzzle extends Puzzle {
+
+	constructor(names){
+		super();
+		this.puzzles = [];
+		this.knaves = [];
+		this.knights = [];
+		this.islanders = [];
+		this.islanderControllers = {};
+		this.statements =[];
+		this.nameSet = names;	
+	}
+
+	join(target) {
+		console.log("joining with " + target);
+		this.puzzles.push(target);
+		this.knaves = addAllUnique(this.knaves, target.knaves);
+		this.islanders = addAllUnique(this.islanders, target.islanders);
+		this.statements = addAllUnique(this.statements, target.statements);
+		this.resetIslanderControllers();
+	}
+
+	randomJoin(target) {
+		var choice = randomInt(2);
+		console.log("debug: random completion selected " + choice)
+		if (choice == 0) {
+			this.joinWithMatch(target);
+		} else {
+			this.joinWithCompound(target);
+		}
+	}
+
+	joinWithMatch(target) {
+		//select before joining
+		var s = randomElement(this.getIslanders());
+		var t = randomElement(target.getIslanders());
+		this.join(target);
+		var state = s.matchStatementFor(t);
+		this.statements.push(state);		
+	}
+
+	joinWithCompound(target) {
+		var s = randomElement(this.getIslanders());
+		var t = randomElement(target.getIslanders());
+		this.join(target);
+		var state = s.compoundStatementFor(t);
+		this.statements.push(state);
+	}
+
+
+}
+
+class SimplePuzzle extends Puzzle {
+	
+	constructor(count, names) {
+		super();
+		this.count = count;
+		if (count == 1) {
+			this.liarCount = 1;
+		} else if (count < 4) {
+			this.liarCount = randomInt(count);
+		} else {
+			this.liarCount = randomRange(Math.floor(count/2)-1, count-2);
+		}
+		this.knaves = [];
+		this.knights = [];
+		this.islanders = [];
+		this.islanderControllers = {};
+		this.nameSet = names;
+		if (typeof this.nameSet === "undefined") {
+			this.nameSet = copyArray(originalNameSet);
+		}
+		for (var i=0; i < this.liarCount; i++) {
+			var pos = randomRange(0, this.nameSet.length -1);
+			var islander = new Knave(this.nameSet.splice(pos, 1)[0]);
+			this.knaves.push(islander);
+			this.islanderControllers[islander.name] = new IslanderController(islander);
+		}
+
+		for (var i = this.liarCount; i <this.count; i++) {
+			var pos = randomRange(0, this.nameSet.length -1);
+			var islander = new Knight(this.nameSet.splice(pos, 1)[0]);
+			this.knights.push(islander);
+			this.islanderControllers[islander.name] = new IslanderController(islander);
+		}
+		this.islanders = shuffle(this.knaves.concat(this.knights));
+		this.statements = this.generateStatements();
+		console.log("initialized: " + this);
+	}
+
 	generateStatements() {
-		var x;
 		var statements = [];
+		if (this.islanders.length < 2) {
+			return statements;
+		}
+		var x;
 		for (x in this.islanders) {
+			var prevSource;
 			var target = this.islanders[x];
 			var remainders = arrayWithoutElement(this.islanders, target);
+			if (prevSource !== undefined) {
+				remainders = arrayWithoutElement(remainders, prevSource);
+				if (remainders.length == 0) {
+					console.log("had trouble finding new source");
+					remainders = ArrayWithoutElement(this.islanders,target);
+				}
+			}
 			var source = randomElement(remainders);
 			statements.push(source.statementFor(target));	
+			prevSource = source;
 		}
 		statements = pruneStatements(statements);
 		statements = joinConnectedSets(this.islanders, statements);
-		//chose a random match statement
+		return shuffle(statements);
+	}
+
+	completeWithMatch() {
+		if (this.islanders.length < 2) {
+			return;
+		}
 		var source = randomElement(this.islanders);
 		var remainders = arrayWithoutElement(this.islanders,source);
-		var target = randomElement(remainders);
-		statements.push(source.matchStatementFor(target));
-		return shuffle(statements);
+		
+		var nbrs = allSourcesAndTargets(source, this.statements);
+		var left = arrayDifference(remainders, nbrs);
+		var target;
+		if (left.length == 0) {
+			console.log("having trouble finding unconnected islander...")
+			target = randomElement(remainders);
+		} else {
+			console.log("finding unconnected islander");
+			target = randomElement(left);
+		}
+		this.statements.push(source.matchStatementFor(target));
+		shuffle(this.statements);
+	}
+
+	completeWithCompound() {
+		if (this.islanders.length < 2) {
+			return;
+		}		
+		var source = randomElement(this.islanders);
+		var remainders = arrayWithoutElement(this.islanders,source);
+		var nbrs = allSourcesAndTargets(source, this.statements);
+		var left = arrayDifference(remainders, nbrs);
+		var target;
+		if (left.length == 0) {
+			console.log("having trouble finding unconnected islander...")
+			target = randomElement(remainders);
+		} else {
+			console.log("finding unconnected islander");
+			target = randomElement(left);
+		}
+		this.statements.push(source.compoundStatementFor(target));
+		shuffle(this.statements);	
+	}
+
+	randomCompletion() {
+		var choice = randomInt(2);
+		if (choice == 0) {
+			this.completeWithMatch();
+		} else {
+			this.completeWithCompound();
+		}
 	}
 
 }
@@ -82,6 +236,10 @@ class Islander {
 		} else {
 			return new Antithetic(this, i);
 		}
+	}
+
+	toString() {
+		return this.name;
 	}
 }
 
@@ -99,7 +257,10 @@ class Knave extends Islander {
 	}
 
 	compoundStatementFor(i) {
-		return Joint(this, i);
+		return new Joint(this, i);
+	}
+	type() {
+		return "knave";
 	}
 }
 
@@ -117,7 +278,10 @@ class Knight extends Islander {
 	}
 
 	compoundStatementFor(i) {
-		return DisJoint(this, i);
+		return new Disjoint(this, i);
+	}
+	type() {
+		return "knight";
 	}
 }
 
@@ -131,9 +295,15 @@ class Statement {
 	fullStatement() {
 		var fs = this.source.name;
 		fs += " says: " + this.text + "."
+		console.log(fs);
 		return fs;
 	}
+
+	description() {
+		return "none";
+	}
 }
+
 
 class Accusation extends Statement {	
 	buildStatement() {
@@ -148,6 +318,51 @@ class Accusation extends Statement {
 		this.text = this.target.name + randomElement(options);
 		return this.text;		
 	}	
+
+	description(){
+		return "accusation";
+	}
+
+	reasoning(known){
+		var islanders = [];
+		islanders.push(this.source);
+		islanders.push(this.target);
+		islanders = removeElement(islanders, known);
+		var unknown = islanders[0];
+		var s = "A knight or knave will call the opposite type a knave." +
+			" When a knight does this, they are telling the truth, when a knave does it they are lying. ";
+		s += "So from this we know that "
+		s += this.target + " and " + this.source + " are opposite types. "; 
+		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type(); 
+		return s;
+	}
+
+	solve(solver) {
+		solver.accusations.push(this);
+	}
+
+	process(known, solver) {
+		if (this.source == known || this.target == known){
+			var islanders = [];
+			islanders.push(this.source);
+			islanders.push(this.target);
+			islanders = removeElement(islanders, known);
+			var unknown = islanders[0];
+			solver.reasoning.push(this.reasoning(known));
+			if (unknown.isKnight()) {
+				addUnique(solver.knights,unknown);
+			} else {
+				addUnique(solver.knaves, unknown);
+			}
+		}
+	}
+
+	done(solver) {
+		var hasTarget = arrayContains(solver.knights,this.target) || arrayContains(solver.knaves,this.target);
+		var hasSource = arrayContains(solver.knights,this.source) || arrayContains(solver.knaves,this.source);  
+		return hasTarget && hasSource;
+	}
+
 }
 
 class Affirmation extends Statement {
@@ -162,6 +377,52 @@ class Affirmation extends Statement {
 		this.text = this.target.name + randomElement(options);
 		return this.text;		
 	}
+
+	description(){
+		return "affirmation";
+	}
+
+	reasoning(known){
+		var islanders = [];
+		islanders.push(this.source);
+		islanders.push(this.target);
+		islanders = removeElement(islanders, known);
+		var unknown = islanders[0];
+		var s = "A knight or knave will call one of their same kind a knight." +
+			" When a knight does this, they are telling the truth, when a knave does it they are lying. ";
+		s += "So from this we know that "
+		s += this.target + " and " + this.source + " are the same type. "; 
+		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type(); 
+		return s;
+	}
+
+	solve(solver) {
+		solver.affirmations.push(this);
+	}
+
+	process(known, solver) {
+		if (this.source == known || this.target == known){
+			var islanders = [];
+			islanders.push(this.source);
+			islanders.push(this.target);
+			islanders = removeElement(islanders, known);
+			var unknown = islanders[0];
+			solver.reasoning.push(this.reasoning(known));
+			if (unknown.isKnight()) {
+				addUnique(solver.knights,unknown);
+			} else {
+				addUnique(solver.knaves,unknown);
+			}
+		}
+	}
+
+	done(solver) {
+		var hasTarget = arrayContains(solver.knights,this.target) || arrayContains(solver.knaves,this.target);
+		var hasSource = arrayContains(solver.knights,this.source) || arrayContains(solver.knaves,this.source);  
+		return hasTarget && hasSource;
+	}
+
+
 }
 
 class Sympathetic extends Statement {
@@ -171,6 +432,21 @@ class Sympathetic extends Statement {
 		];
 		this.text = this.target.name + randomElement(options);
 		return this.text;
+	}
+	description(){
+		return "sympathetic";
+	}
+
+	reasoning(){
+		var s = "A knight or a knave will say they are the same type as a knight.";
+		s += " So when " + this.source + " says '" + this.text + ",' we know that ";
+		s += this.target + " is a knight."; 
+		return s;
+	}
+
+	solve(solver) {
+		solver.reasoning.push(this.reasoning());
+		addUnique(solver.knights, this.target);		
 	}
 }
 
@@ -182,31 +458,149 @@ class Antithetic extends Statement {
 		this.text = this.target.name + randomElement(options);
 		return this.text;
 	}	
+
+	description(){
+		return "antithetic";
+	}
+
+	reasoning(){
+		var s = "Both knights and knaves will say they are not the same type as a knave.";
+		s += " So when " + this.source + " says '" + this.text + ",' we know that ";
+		s += this.target + " is a knave."; 
+		return s;
+	}
+
+	solve(solver) {
+		solver.reasoning.push(this.reasoning());
+		addUnique(solver.knaves,this.target);		
+	}
 }
 
 class Disjoint extends Statement {
 	buildStatement() {
 		this.text = this.target.name;
-		if (this.source.isKnight) {
+		if (this.target.isKnight()) {
 			this.text += " is a knight ";
 		} else {
 			this.text += " is a knave ";
 		}
-		this.text = "or I am a knave"
+		this.text += "or I am a knave"
 		return this.text;		
+	}
+	description(){
+		return "disjoint";
+	}
+
+	reasoning(){
+		var s = "When " + this.source + " said '"+ this.text +"'";
+		s += ", we know this is not a false statement (if it was false, this would make the speaker a knave, which would make the statment true)."
+		s += " So, " + this.source + " is a knight and " + this.target;
+		s += " is a " + this.target.type() +".";
+		return s;			
+	}
+	solve(solver) {
+		solver.reasoning.push(this.reasoning());
+		
+		addUnique(solver.knights, this.source);
+		if (this.target.isKnight()) {
+			addUnique(solver.knights, this.target);
+		} else {
+			addUnique(solver.knaves, this.target);
+		}
 	}
 }
 
 class Joint extends Statement {
 	buildStatement() {
 		this.text = this.target.name;
-		if (this.source.isKnight) {
+		if (this.target.isKnight()) {
 			this.text += " is a knave ";
 		} else {
 			this.text += " is a knight ";
 		}
-		this.text = "and I am a knave too";
+		this.text += "and I am a knave";
 		return this.text;		
+	}
+	
+	description() {
+		return "joint";
+	}
+
+	reasoning(){
+		var s = "Because " + this.source + " said '"+ this.text +",;";
+		s += ", we know they are not making a true statement (if it was true, the speaker would be a knave, making the statmeent false)."; 
+		s += " Therefore, " + this.source + " is a knave and ";
+		if (this.target.isKnight()) {
+			s += " is a knight.";
+		} else {
+			s += " is a knave.";
+		}
+		return s;			
+	}
+
+	solve(solver) {
+		solver.reasoning.push(this.reasoning());
+		addUnique(solver.knaves, this.source);
+		if (this.target.isKnight()) {
+			addUnique(solver.knights,this.target);
+		} else {
+			addUnique(solver.knaves,this.target);
+		}
+	}
+}
+
+class Solver {
+	constructor(puzzle) {
+		this.puzzle = puzzle;
+		this.reasoning = [];
+		this.accusations = [];
+		this.affirmations = [];
+		this.knights = [];
+		this.knaves = [];
+	}
+
+	solve() {
+		console.log("computing solution....");
+		var x;
+		for (x in this.puzzle.statements) {
+			var statement = this.puzzle.statements[x];
+			statement.solve(this);
+		}
+		
+		var remainingStatements = copyArray(this.affirmations);
+		remainingStatements = addAllUnique(remainingStatements, this.accusations);
+
+		while(remainingStatements.length !== 0) {
+			var nextRemaining = copyArray(remainingStatements);
+			var y;
+			for (y in remainingStatements) {
+				var s = remainingStatements[y];
+				if (s.done(this)) {
+					nextRemaining = removeElement(nextRemaining, s);
+					continue;
+				}
+				var knaveCopy = copyArray(this.knaves);
+				var z;
+				for (z in knaveCopy){
+					s.process(knaveCopy[z], this);
+				}
+				var knightCopy = copyArray(this.knights);
+				var w;
+				for (w in knightCopy){
+					s.process(knightCopy[w], this);
+				}
+			}
+			remainingStatements = nextRemaining;
+		}
+		var i;
+		for (i in this.reasoning) {
+			console.log(this.reasoning[i]);
+		}
+		console.log(this.toString());
+	}
+
+	toString() {
+		return "knights: " + this.knights + " knaves: " + this.knaves;
 	}
 }
 
@@ -239,29 +633,35 @@ class IslandControllers {
 	}
 
 	accusationDisplay() {
-			var s = "<div> <ul>";
+		var p = "<div><p>"
+		p += "You have met a group of " + this.island.islanders.length + " islanders.";
+		p += " Their names are " + prettyPrintList(this.island.islanders) +".";
+		p += "</div>";
+
+		var s = "<div> <ul>";
 		var i;
-		var statements = this.island.statements;
+		var statements = this.island.getStatements();
 		for (i in statements ) {
 			s += statements[i].fullStatement();
 			s += "</br>";
 		}
 		s += "</ul></div>";
-		return s;
+		return p + s;
 	
 	}
 
 	islandersDisplay() {
 		var s = "<div> <ul>";
 		var i;
-		for (i in this.island.islanders) {
-			s += new IslanderController(this.island.islanders[i]).display();
+		for (i in this.island.getIslanders()) {
+			s += new IslanderController(this.island.getIslanders()[i]).display();
 		}
 		s += "</ul></div>";
 		return s;
 	}
 
 }
+
 var knavesList = [];
 function selectIslander(event) {
 	var theKnave = event.currentTarget.id;
@@ -282,6 +682,22 @@ class StatementController {
 /**
 * Utility functions - mostly managing arrays
 */
+
+function prettyPrintList(list) {
+	var s = "";
+	var i;
+	for (i in list) {
+		if (i != 0 && list.length != 2) {
+			s +=",";
+		} 
+		if (i == list.length -1 && list.length !== 1) {
+			s += " and";
+		}
+		s += " ";
+		s += list[i];	
+	}
+	return s;
+}
 
 function joinConnectedSets(islanders, listOfStatements) {
 	//1 calculate the connected sets
@@ -492,5 +908,7 @@ function copyArray(array) {
 };
 
 function randomElement(array) {
-	return array[randomRange(0, array.length -1)];
+	var res =randomRange(0, array.length -1);
+	console.log("random element: " + res);
+	return array[res];
 };

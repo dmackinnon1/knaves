@@ -31,7 +31,8 @@ ul {
 }
 
 </style>
-<script src="js/knaves.js"></script> <!-- required for callback registration-->
+<script src="js/knaves.js"></script>
+<script src="js/solver.js"></script>
 <script>
 
 	var island;
@@ -45,17 +46,33 @@ ul {
 			console.log(solved);
 			console.log(island.knaveNames());
 			var solutionDisplay = document.getElementById("solutionDisplay");
+			var s = "You said the knaves were " + prettyPrintList(knavesList) + ".";
+			if (knavesList.length == 0) {
+				s = "You said there were no knaves!";
+			} else if (knavesList.length == 1) {
+				s = "You said that the one knave was " + prettyPrintList(knavesList) + ".";
+			}
 			if (solved) {
-				solutionDisplay.innerHTML = "<h2> solved! The knaves were: " 
-					+ island.knaveNames() +"</h2>" ;
+				solutionDisplay.innerHTML = "<h3>" + s + " You were right.</h3>" ;
 			} else {
-				solutionDisplay.innerHTML = "<h2> sorry :( The knaves were: " 
-					+ island.knaveNames() + "</h2>" ;
+				if (island.knaveNames().length == 0) {
+					solutionDisplay.innerHTML = "<h3>" + s + " You were wrong. There were none! </h3>";	
+				} else if (island.knaveNames().length == 1) {
+					solutionDisplay.innerHTML = "<h3>" + s + " You were wrong. The only knave was: " 
+					+ prettyPrintList(island.knaveNames()) + "</h3>" ;	
+				} else {
+					solutionDisplay.innerHTML = "<h3>" + s + " You were wrong. The knaves were: " 
+					+ prettyPrintList(island.knaveNames()) + "</h3>" ;
+				}
 			}
 			disabled = true;
 			var islandersDisplay = document.getElementById("islandersDisplay");
 			islandersDisplay.innerHTML = "";
 			$("#reset").addClass("btn-success");
+			//solver 
+			var solver = new Solver(island);
+			solver.solve();
+
 		});
 		$("#reset").on("click", function(event){
 			reset();
@@ -63,15 +80,37 @@ ul {
 	});
 
 	function reset() {
+		console.log("========= new puzzle ============");
 		switch(puzzleType) {
 		case "easy":
-			island = new Islanders(4);
+			var names = copyArray(originalNameSet);
+			var basic = new SimplePuzzle(3, names);
+			var basic1 = new SimplePuzzle(1, names);
+			basic.randomCompletion();
+			island = new CompoundPuzzle();
+			island.join(basic);
+			island.randomJoin(basic1);
 			break;
 		case "tricky":
-			island = new Islanders(6);
+			var names = copyArray(originalNameSet);
+			var basic = new SimplePuzzle(3, names);
+			var basic2 = new SimplePuzzle(3,names);
+			island = new CompoundPuzzle();
+			island.join(basic);
+			island.randomJoin(basic2);
 			break;
 		case "trickier":
-			island = new Islanders(8);
+			var names = copyArray(originalNameSet);
+			var basic = new SimplePuzzle(2, names);
+			var basic2 = new SimplePuzzle(1, names);
+			var basic3 = new SimplePuzzle(3, names);
+			var basic4 = new SimplePuzzle(1, names);
+			//basic.completeWithCompound();
+			island = new CompoundPuzzle();
+			island.join(basic);
+			island.joinWithCompound(basic2)
+			island.randomJoin(basic3);
+			//island.randomJoin(basic4);
 			break;
 		}
 		var controller = new IslandControllers(island);
@@ -84,10 +123,7 @@ ul {
 		knavesList = [];
 		disabled = false;
 		$("#reset").removeClass("btn-success");
-		//experiments
-		var cset = connectedSets(island.islanders, island.islanders, island.statements, [],[]);
-		console.log(cset);
-	
+		
 	};
 	
 	function setButtons() {
