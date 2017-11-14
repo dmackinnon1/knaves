@@ -12,7 +12,130 @@ var originalNameSet = ["Alice", "Bob", "Carol", "Dave",
 	"Trevor", "Unis", "Victoria", "Wallace","Xavier",
 	"Zelda"];
 
-var nameSet; //to do, move to Islanders scope
+class PuzzleGenerator {
+
+	constructor() {
+		this.puzzle = null;
+	}
+
+	easy() {
+		var choice = randomInt(3);
+		if (choice == 0) {
+			this.easy1();
+		} else if (choice == 1){
+			this.easy2();		
+		} else {
+			this.easy3();
+		}
+	}
+
+	medium() {
+		var choice = randomInt(2);
+		if (choice == 0) {
+			this.medium1();
+		} else if (choice == 1){
+			this.medium2();		
+		} 
+	}
+
+	hard(){
+		this.hard1();
+	}
+
+	easy1(){
+		var names = copyArray(originalNameSet);
+		var basic = new SimplePuzzle(3, names);
+		var basic1 = new SimplePuzzle(1, names);
+		basic.randomCompletion();
+		this.puzzle = new CompoundPuzzle();
+		this.puzzle.join(basic);
+		this.puzzle.randomJoin(basic1);
+		return this.puzzle;
+	}
+
+	easy2(){
+		var names = copyArray(originalNameSet);
+		var basic = new SimplePuzzle(3, names);
+		basic.completeWithMatch();
+		this.puzzle = new CompoundPuzzle();
+		this.puzzle.join(basic);
+		return this.puzzle;
+	}
+
+	easy3(){
+		var names = copyArray(originalNameSet);
+		var basic = new SimplePuzzle(1, names);
+		var basic1 = new SimplePuzzle(3, names);
+		this.puzzle = new CompoundPuzzle();	
+		this.puzzle.join(basic);		
+		this.puzzle.joinWithCompound(basic1);
+		return this.puzzle;
+	}
+
+	medium1() {
+		var names = copyArray(originalNameSet);
+		var basic = new SimplePuzzle(3, names);
+		var basic2 = new SimplePuzzle(3,names);
+		this.puzzle = new CompoundPuzzle();
+		this.puzzle.join(basic);
+		this.puzzle.joinWithCompound(basic2);
+	}
+
+	medium1() {
+		var names = copyArray(originalNameSet);
+		var basic = new SimplePuzzle(3, names);
+		var basic2 = new SimplePuzzle(3,names);
+		basic.completeWithMatch();
+		this.puzzle = new CompoundPuzzle();
+		this.puzzle.join(basic);
+		this.puzzle.joinWithMatch(basic2);
+	}
+
+	medium2() {
+		var names = copyArray(originalNameSet);
+		var basic = new SimplePuzzle(3, names);
+		var basic2 = new SimplePuzzle(2,names);
+		var basic3 = new SimplePuzzle(1, names);
+		basic.completeWithMatch();
+		this.puzzle = new CompoundPuzzle();
+		this.puzzle.join(basic);
+		this.puzzle.join(basic2);
+		this.puzzle.joinWithCompound(basic3);
+	}
+
+	hard1(){
+		var names = copyArray(originalNameSet);
+		var basic = new SimplePuzzle(2, names);
+		var basic2 = new SimplePuzzle(1, names);
+		var basic3 = new SimplePuzzle(3, names);
+		var basic4 = new SimplePuzzle(1, names);
+		//basic.completeWithCompound();
+		this.puzzle = new CompoundPuzzle();
+		this.puzzle.join(basic);
+		this.puzzle.joinWithCompound(basic2)		
+		this.puzzle.joinWithMatch(basic3);
+		this.puzzle.joinWithMatch(basic4);
+	}
+
+	controller() {
+		return new IslandControllers(this.puzzle);
+	}
+
+	isSolved(knavesList) {
+		arraysEquivalent(knavesList, this.puzzle.knaveNames()) 
+	}
+
+	showReasoning() {
+			var solver = new Solver(this.puzzle);
+			solver.solve();
+	}
+
+	knaveNames(){
+		return this.puzzle.knaveNames();
+	}
+
+}
+
 
 class Puzzle {
 
