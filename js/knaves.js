@@ -1,16 +1,30 @@
-/**
-* Infrastructure for "knights and knaves" puzzles.
-*/
 
 /**
-* Model classes
-*/
+ * Names used in puzzles
+ */
 var originalNameSet = ["Alice", "Bob", "Carol", "Dave", 
 	"Edward", "Francine", "Gary", 
 	"Henry", "Ingrid", "Joan", "Kevin", "Lisa", "Mike",
 	"Neil", "Owen", "Pat", "Quinn", "Rachel", "Sally",
 	"Trevor", "Unis", "Victoria", "Wallace","Xavier",
-	"Zelda"];
+	"Yasmin","Zelda"];
+
+var originalNameSet1 = ["Arthur", "Beatrix", "Connor", "Denise", 
+	"Eustice", "Frank", "Gwen", 
+	"Hillary", "Ira", "Justin", "Kirstin", "Larry", "Michelle",
+	"Nancy", "Oberon", "Pamela", "Quentin", "Robert", "Samuel",
+	"Tracy", "Uri", "Vincent", "Wendy","Xan",
+	"Yuri","Zoro"];
+
+function nameSet() {
+	return randomElement([originalNameSet1, originalNameSet]);
+}
+
+controllers = {};
+controllers.disabled = false;
+/**
+* Model classes
+*/
 
 class PuzzleGenerator {
 
@@ -43,7 +57,7 @@ class PuzzleGenerator {
 	}
 
 	easy1(){
-		var names = copyArray(originalNameSet);
+		var names = copyArray(nameSet());
 		var basic = new SimplePuzzle(3, names);
 		var basic1 = new SimplePuzzle(1, names);
 		basic.randomCompletion();
@@ -54,7 +68,7 @@ class PuzzleGenerator {
 	}
 
 	easy2(){
-		var names = copyArray(originalNameSet);
+		var names = copyArray(nameSet());
 		var basic = new SimplePuzzle(3, names);
 		basic.completeWithMatch();
 		this.puzzle = new CompoundPuzzle();
@@ -63,7 +77,7 @@ class PuzzleGenerator {
 	}
 
 	easy3(){
-		var names = copyArray(originalNameSet);
+		var names = copyArray(nameSet());
 		var basic = new SimplePuzzle(1, names);
 		var basic1 = new SimplePuzzle(3, names);
 		this.puzzle = new CompoundPuzzle();	
@@ -73,7 +87,7 @@ class PuzzleGenerator {
 	}
 
 	medium1() {
-		var names = copyArray(originalNameSet);
+		var names = copyArray(nameSet());
 		var basic = new SimplePuzzle(3, names);
 		var basic2 = new SimplePuzzle(3,names);
 		this.puzzle = new CompoundPuzzle();
@@ -82,7 +96,7 @@ class PuzzleGenerator {
 	}
 
 	medium1() {
-		var names = copyArray(originalNameSet);
+		var names = copyArray(nameSet());
 		var basic = new SimplePuzzle(3, names);
 		var basic2 = new SimplePuzzle(3,names);
 		basic.completeWithMatch();
@@ -92,19 +106,19 @@ class PuzzleGenerator {
 	}
 
 	medium2() {
-		var names = copyArray(originalNameSet);
+		var names = copyArray(nameSet());
 		var basic = new SimplePuzzle(3, names);
 		var basic2 = new SimplePuzzle(2,names);
 		var basic3 = new SimplePuzzle(1, names);
 		basic.completeWithMatch();
 		this.puzzle = new CompoundPuzzle();
-		this.puzzle.join(basic);
 		this.puzzle.join(basic2);
 		this.puzzle.joinWithCompound(basic3);
+		this.puzzle.join(basic);	
 	}
 
 	hard1(){
-		var names = copyArray(originalNameSet);
+		var names = copyArray(nameSet());
 		var basic = new SimplePuzzle(2, names);
 		var basic2 = new SimplePuzzle(1, names);
 		var basic3 = new SimplePuzzle(3, names);
@@ -121,17 +135,58 @@ class PuzzleGenerator {
 		return new IslandControllers(this.puzzle);
 	}
 
-	isSolved(knavesList) {
-		arraysEquivalent(knavesList, this.puzzle.knaveNames()) 
+	solutionSummary(knavesList, knightsList) {
+		var result = arraysEquivalent(knavesList, this.puzzle.knaveNames()); 
+		result = result && arraysEquivalent(knightsList, this.puzzle.knightNames());
+		
+		var s = "<br> You said the knaves were " + prettyPrintList(knavesList) + ",";
+		if (knavesList.length == 0) {
+			s = "<br> You said there were no knaves,";
+		} else if (knavesList.length == 1) {
+			s = "<br> You said that the one knave was " + prettyPrintList(knavesList) + ",";
+		}
+		
+		s+= " and that ";
+		if (knightsList.length == 0) {
+			s += "there were no knights.";
+		} else if (knightsList.length == 1) {
+			s += "the one knight was " + prettyPrintList(knightsList) + ".";
+		} else {
+			s += "the knights were " + prettyPrintList(knightsList) + "."
+		}
+
+		s+="<br>";
+		if (result) {
+			s += " <em> You were right.</em>" ;
+		} else {
+			s += " <em> You were wrong.</em>"
+			if (this.puzzle.knaveNames().length == 0) {
+				s += " There were no knaves. ";	
+			} else if (this.puzzle.knaveNames().length == 1) {
+				s += " The only knave was " 
+					+ prettyPrintList(this.puzzle.knaveNames());	
+			} else {
+				s += " The knaves were " 
+					+ prettyPrintList(this.puzzle.knaveNames());
+			}
+			s += ", and"
+			if (this.puzzle.knightNames().length == 0) {
+				s += " there were no knights";	
+			} else if (this.puzzle.knightNames().length == 1) {
+				s += " the only knight was " 
+					+ prettyPrintList(this.puzzle.knightNames());	
+			} else {
+				s += " the knights were " 
+					+ prettyPrintList(this.puzzle.knightNames());
+			}
+			s += ".";
+		}
+		return s;
 	}
 
 	showReasoning() {
-			var solver = new Solver(this.puzzle);
-			solver.solve();
-	}
-
-	knaveNames(){
-		return this.puzzle.knaveNames();
+		var solver = new Solver(this.puzzle);
+		return solver.solve();
 	}
 
 }
@@ -142,6 +197,8 @@ class Puzzle {
 	constructor() {
 		this.islanders = null;
 		this.statements = null;
+		this.knaves = null;
+		this.knights = null;
 		this.islanderControllers = null;
 	}
 
@@ -153,23 +210,20 @@ class Puzzle {
 		return this.statements;
 	}
 
-	getControllers() {
-		return this.islanderControllers;
-	}
-
-	resetIslanderControllers(){
-		this.islanderControllers = {};
-		var k = null;
-		for (k in this.islanders) {
-			this.islanderControllers[this.islanders[k].name] = new IslanderController(this.islanders[k]);		
-		}
-	}
-
 	knaveNames() {
 		var x;
 		var list = [];
 		for (x in this.knaves) {
 			list.push(this.knaves[x].name);
+		}
+		return list;
+	}
+
+	knightNames() {
+		var x;
+		var list = [];
+		for (x in this.knights) {
+			list.push(this.knights[x].name);
 		}
 		return list;
 	}
@@ -197,9 +251,10 @@ class CompoundPuzzle extends Puzzle {
 		console.log("joining with " + target);
 		this.puzzles.push(target);
 		this.knaves = addAllUnique(this.knaves, target.knaves);
+		this.knights = addAllUnique(this.knights, target.knights);
 		this.islanders = addAllUnique(this.islanders, target.islanders);
 		this.statements = addAllUnique(this.statements, target.statements);
-		this.resetIslanderControllers();
+		//this.resetIslanderControllers();
 	}
 
 	randomJoin(target) {
@@ -473,11 +528,10 @@ class Accusation extends TypeStatement {
 		islanders.push(this.target);
 		islanders = removeElement(islanders, known);
 		var unknown = islanders[0];
-		var s = "A knight or knave will call the opposite type a knave." +
-			" When a knight does this, they are telling the truth, when a knave does it they are lying. ";
-		s += "So from this we know that "
+		var s = "A knight or knave will call the opposite type a knave.";
+		s += " So when " + this.source +" says that " + this.target +" is a knave, we know that "
 		s += this.target + " and " + this.source + " are opposite types. "; 
-		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type(); 
+		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type() +"."; 
 		return s;
 	}
 	
@@ -502,11 +556,10 @@ class Affirmation extends TypeStatement {
 		islanders.push(this.target);
 		islanders = removeElement(islanders, known);
 		var unknown = islanders[0];
-		var s = "A knight or knave will call one of their same kind a knight." +
-			" When a knight does this, they are telling the truth, when a knave does it they are lying. ";
-		s += "So from this we know that "
+		var s = "A knight or knave will call one of their same kind a knight.";
+		s += " So when " + this.source +" says that " + this.target +" is a knight, we know that "
 		s += this.target + " and " + this.source + " are the same type. "; 
-		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type(); 
+		s += " Since " + known + " is a " + known.type() + ", then " + unknown + " is a " + unknown.type() +"."; 
 		return s;
 	}
 }
@@ -522,7 +575,7 @@ class Sympathetic extends Statement {
 
 	reasoning(){
 		var s = "A knight or a knave will say they are the same type as a knight.";
-		s += " So when " + this.source + " says '" + this.text + ",' we know that ";
+		s += " So when " + this.source + " says they are the same type as " + this.target + ", we know that ";
 		s += this.target + " is a knight."; 
 		return s;
 	}
@@ -544,7 +597,7 @@ class Antithetic extends Statement {
 
 	reasoning(){
 		var s = "Both knights and knaves will say they are not the same type as a knave.";
-		s += " So when " + this.source + " says '" + this.text + ",' we know that ";
+		s += " So when " + this.source + " says they are a different type than " + this.target + ", we know that ";
 		s += this.target + " is a knave."; 
 		return s;
 	}
@@ -569,7 +622,8 @@ class Disjoint extends Statement {
 
 	reasoning(){
 		var s = "When " + this.source + " said '"+ this.text +",'";
-		s += " we know this is not a false statement (if it was false, this would make the speaker a knave, which would make the statment true)."
+		s += " we know " + this.source + " must be making a true statement."; 
+		s += "(If it was false, this would make the speaker a knave, which would make the statment true, but knaves cannot make true statements.)";
 		s += " So, " + this.source + " is a knight and " + this.target;
 		s += " is a " + this.target.type() +".";
 		return s;			
@@ -601,14 +655,11 @@ class Joint extends Statement {
 
 	reasoning(){
 		var s = "Because " + this.source + " said '"+ this.text +",'";
-		s += " we know they are not making a true statement (if it was true, the speaker would be a knave, making the statmeent false)."; 
-		s += " Therefore, " + this.source + " is a knave and ";
-		if (this.target.isKnight()) {
-			s += " is a knight.";
-		} else {
-			s += " is a knave.";
-		}
-		return s;			
+		s += " we know " + this.source + " is not making a true statement."; 
+		s += " (If it was true, the speaker would be a knave, making the statmeent false, contradicting its being true.)"; 
+		s += " Therefore, " + this.source + " is a knave and " + this.target;
+		s += " is a " + this.target.type() +".";
+		return "<br>" + s;			
 	}
 
 	solve(solver) {
@@ -663,11 +714,15 @@ class Solver {
 			}
 			remainingStatements = nextRemaining;
 		}
+		var str = "<ul>";
 		var i;
 		for (i in this.reasoning) {
-			console.log(this.reasoning[i]);
+			str +="<li>";
+			str += this.reasoning[i];
+			str +="</li>";
 		}
-		console.log(this.toString());
+		str += "</ul>";
+		return "<br>" + str;
 	}
 
 	toString() {
@@ -682,18 +737,18 @@ class Solver {
 class IslanderController {
 	constructor(islander) {
 		this.islander = islander;
-		this.selected = false;
 	}
 
 	display() {
 		var txt = "glyphicon glyphicon-unchecked";
-		if (this.selected) {
-			txt = "glyphicon glyphicon-checked";
-		}
-		var btn = "<li><span class='padSpan'>" + this.islander.name + "</span>";
-		btn +=  "<button type='button' id='"+ this.islander.name + "' class='btn btn-primary', onclick='selectIslander(event)'>";
+		var btn = "<tr><td>" + this.islander.name + "</td>";
+		btn +=  "<td><button type='button' id='knight_"+ this.islander.name + "' class='btn btn-primary', onclick='selectKnight(event)'>";
 		btn += "<span class='glypicon " + txt + " lrg-font'></span>"
-		btn += "</button> </li>";
+		btn += "</button></td>";
+		btn +=  "<td><button type='button' id='knave_"+ this.islander.name + "' class='btn btn-primary', onclick='selectKnave(event)'>";
+		btn += "<span class='glypicon " + txt + " lrg-font'></span>"
+		btn += "</button></td>";
+		btn += "</tr>";
 		return btn;		
 	}	
 }
@@ -701,6 +756,7 @@ class IslanderController {
 class IslandControllers {
 	constructor(island) {
 		this.island = island;
+		controllers.disabled = false;
 	}
 
 	accusationDisplay() {
@@ -722,33 +778,59 @@ class IslandControllers {
 	}
 
 	islandersDisplay() {
-		var s = "<div> <ul>";
+		var s = "<div> <table>";
 		var i;
+		s+="<tr><th>Islander</th><th>knight?</th><th>knave?</th></tr>"
 		for (i in this.island.getIslanders()) {
 			s += new IslanderController(this.island.getIslanders()[i]).display();
 		}
-		s += "</ul></div>";
+		s += "</table></div>";
 		return s;
 	}
-
 }
-
+/**
+* Button functions
+*/
 var knavesList = [];
-function selectIslander(event) {
-	var theKnave = event.currentTarget.id;
+var knightsList = [];
+
+function selectKnave(event) {
+	if (controllers.disabled) return;
+	var id = event.currentTarget.id;
+	var theKnave = id.substring(id.indexOf('_')+1, id.length);	
 	knavesList = addOrRemove(knavesList, theKnave);
+	kinghtsList = removeElement(knightsList, theKnave);
 	if (arrayContains(knavesList,theKnave)) {
-		$("#" + theKnave).addClass("btn-danger");
+		$("#knave_" + theKnave).addClass("btn-danger");		
+		$("#knave_" + theKnave).html("<span class='glypicon glyphicon glyphicon-ok lrg-font'></span>");		
+		$("#knight_" + theKnave).removeClass("btn-success");
+		$("#knight_" + theKnave).html("<span class='glypicon glyphicon glyphicon-unchecked lrg-font'></span>");	
+
 	} else {
-		$("#" + theKnave).removeClass("btn-danger");	
+		$("#knave_" + theKnave).removeClass("btn-danger");	
+		$("#knave_" + theKnave).html("<span class='glypicon glyphicon glyphicon-unchecked lrg-font'></span>");	
 	}
-	console.log(knavesList);
+	console.log("knavesList: " + knavesList);
 };
 
+function selectKnight(event) {
+	if (controllers.disabled) return;
+	var id = event.currentTarget.id;
+	var theKnight = id.substring(id.indexOf('_')+1, id.length);
+	knightsList = addOrRemove(knightsList, theKnight);
+	knavesList = removeElement(knavesList, theKnight);
+	if (arrayContains(knightsList,theKnight)) {
+		$("#knight_" + theKnight).addClass("btn-success");
+		$("#knight_" + theKnight).html("<span class='glypicon glyphicon glyphicon-ok lrg-font'></span>");				
+		$("#knave_" + theKnight).removeClass("btn-danger");
+		$("#knave_" + theKnight).html("<span class='glypicon glyphicon glyphicon-unchecked lrg-font'></span>");	
+	} else {
+		$("#knight_" + theKnight).removeClass("btn-success");
+		$("#knight_" + theKnight).html("<span class='glypicon glyphicon glyphicon-unchecked lrg-font'></span>");	
+	}
+	console.log("knightsList: " + knightsList);
+};
 
-class StatementController {
-
-}
 
 /**
 * Utility functions - mostly managing arrays
@@ -864,30 +946,6 @@ function connectedSets(islanders, completeIslanders, listOfStatements, setList, 
 }
 
 
-function randomInt(lessThan){
-	return Math.floor(Math.random()*lessThan);
-};
-
-function randomRange(greaterThan, lessThan){
-	var shifted = randomInt(lessThan - greaterThan);
-	return lessThan - shifted; 
-};
-
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex;
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-    // Pick a remaining element...
-    randomIndex = randomRange(0, currentIndex -1);
-    currentIndex -= 1;
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-  return array;
-};
-
 function arrayWithoutElement(array, e) {
 	var x;
 	var remainder = [];
@@ -919,6 +977,8 @@ function arrayContainsArray(array1, array2) {
 };
 
 function arraysEquivalent(array1, array2) {
+	if (array1.length != array2.length) return false;
+	if (array1.length === 0 && array2.length === 0) return true;
 	return arrayContainsArray(array1, array2) && arrayContainsArray(array2, array1);
 };
 
@@ -978,8 +1038,45 @@ function copyArray(array) {
 	return newArray;
 };
 
+
+/**
+* Randomization
+*/
+
+/*
+* returns a pseudo-random integer in the range
+* [0, lessthan)
+*/
+function randomInt(lessThan){
+	return Math.floor(Math.random()*lessThan);
+};
+
+/**
+* returns a pseudo-random integer in the range 
+* [greaterThan, lessThan]
+*
+*/
+function randomRange(greaterThan, lessThan){
+	var shifted = randomInt(lessThan - greaterThan + 1);
+	return lessThan - shifted; 
+};
+
 function randomElement(array) {
-	var res =randomRange(0, array.length -1);
-	console.log("random element: " + res);
+	var res =randomRange(0, array.length-1);
 	return array[res];
+};
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+    // Pick a remaining element...
+    randomIndex = randomRange(0, currentIndex -1);
+    currentIndex -= 1;
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+  return array;
 };

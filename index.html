@@ -9,23 +9,34 @@
 <title>Knaves and Knights</title>
 </head>
 <style>
+
 ul {
 	padding-left: 40px;
 	list-style-type: none;
 }
 
-
-.padSpan {
-	width: 100px;
-	float: left;	
+li {
+	padding-bottom: 10px;
 }
+
+table, tr {
+	padding: 4px;
+	text-align: center;
+    border: 1px solid black;
+    border-collapse: collapse; 
+    margin: auto;
+}
+
+th, td {
+	padding: 4px;
+}
+
 
 .buttonDiv {
 	display: inline-block;
 	padding: 2px;
 	border: 2px;
 }
-
 .centered {
 	text-align: center;
 }
@@ -34,46 +45,31 @@ ul {
 <script src="js/knaves.js"></script>
 <script src="js/solver.js"></script>
 <script>
-
 	var pg; // a puzzle generator
 	var puzzleType = "easy";
 	var disabled = false;
 	$(document).ready(function() {
 		reset();
+		
 		$("#solve").on("click", function(event){
 			if (disabled) return;
-			var solved = pg.isSolved(knavesList); 
-			console.log(solved);
 			var solutionDisplay = document.getElementById("solutionDisplay");
-			var s = "You said the knaves were " + prettyPrintList(knavesList) + ".";
-			if (knavesList.length == 0) {
-				s = "You said there were no knaves!";
-			} else if (knavesList.length == 1) {
-				s = "You said that the one knave was " + prettyPrintList(knavesList) + ".";
-			}
-			if (solved) {
-				solutionDisplay.innerHTML = "<h3>" + s + " You were right.</h3>" ;
-			} else {
-				if (pg.knaveNames().length == 0) {
-					solutionDisplay.innerHTML = "<h3>" + s + " You were wrong. There were none! </h3>";	
-				} else if (pg.knaveNames().length == 1) {
-					solutionDisplay.innerHTML = "<h3>" + s + " You were wrong. The only knave was: " 
-					+ prettyPrintList(pg.knaveNames()) + "</h3>" ;	
-				} else {
-					solutionDisplay.innerHTML = "<h3>" + s + " You were wrong. The knaves were: " 
-					+ prettyPrintList(pg.knaveNames()) + "</h3>" ;
-				}
-			}
+			solutionDisplay.innerHTML = pg.solutionSummary(knavesList, knightsList);
 			disabled = true;
-			var islandersDisplay = document.getElementById("islandersDisplay");
-			islandersDisplay.innerHTML = "";
+			controllers.disabled = true;
 			$("#reset").addClass("btn-success");
-			//solver 
-			pg.reasoning();
-
 		});
+
 		$("#reset").on("click", function(event){
 			reset();
+		});
+
+		$("#reasoning").on("click", function(event){
+			disabled = true;
+			controllers.disabled = true;
+			var reasoningDisplay =  document.getElementById("reasoningDisplay");
+			reasoningDisplay.innerHTML = pg.showReasoning();
+			$("#reset").addClass("btn-success");
 		});
 	});
 
@@ -98,10 +94,12 @@ ul {
 		accusationDisplay.innerHTML = controller.accusationDisplay();
 		var solutionDisplay = document.getElementById("solutionDisplay");
 		solutionDisplay.innerHTML = "";	
+		var reasoningDisplay = document.getElementById("reasoningDisplay");
+		reasoningDisplay.innerHTML = "";
 		knavesList = [];
+		knightsList = [];
 		disabled = false;
-		$("#reset").removeClass("btn-success");
-		
+		$("#reset").removeClass("btn-success");		
 	};
 	
 	function setButtons() {
@@ -146,50 +144,45 @@ ul {
 		<h1>The Island of Knights and Knaves
 		</h1>
 	</div> 		
-	<div class="media">
-  	<a class="media-left media-middle" href="#">
-    	<img class="media-object" src="imgs/Knights.png" alt="Knights" width="300" height="145">
- 	 </a>
-  	<div class="media-body">
-    <h4 class="media-heading">Knights and Knave Puzzles</h4>
-   <p>
-On the island of Knights and Knaves, everyone is either a Knave, 
-or a Knight. Knights always tell the truth, and Knaves always lie. You have encountered a group of islanders, and want to know who the knaves in the group are. The islanders have made some statments about each other - each statement should be taken independently: each is either a true statement or a false statement.
-</p>
-   	</div>
+
+	<p>
+	On the island of Knights and Knaves, everyone is either a Knave, or a Knight. Knights always tell the truth, and Knaves always lie. You have encountered a group of islanders, and want to know who the knaves in the group are. The islanders have made some statments about each other - each statement should be taken independently: each is either a true statement or a false statement.
+	</p>
+	<hr>
+	<div class="centered">
+		<div class="btn-group btn-group-md " role="group"> 
+  			<button type="button" id="easy" class="puzzleTypeBtn btn btn-primary">easy</button>
+  			<button type="button" id="tricky" class="puzzleTypeBtn btn btn-secondary">tricky</button>
+  			<button type="button" id="trickier" class="puzzleTypeBtn btn btn-secondary">trickier</button>
+ 		</div>
+	</div>
+	<hr>
+	<p> Here is your puzzle: </p>
+	<div id="accusationDisplay"></div>	
+	<hr>
+	<p>
+	Categorize each islander as either a knight or a knave (in these puzzles, you can always find the type of each islander). When you think you are done, click the 'solve' button to see if have solved the puzzle.
+	</p>
+
+	<hr>
+	
+	<div id="islandersDisplay" class="centered" style="text-align=center"></div>
+	<br>
+	<div id="soveButton">
+		<button type="button" id="solve" class="btn btn-secondary typeButton">Solve</span></button>
+	</div>
+	<div id="solutionDisplay"></div>	
+	<hr>
+	<div id="reasoningButton">
+		<button type="button" id="reasoning" class="btn btn-secondary typeButton">Show Reasoning</span></button>
+	</div>
+	<div id="reasoningDisplay"></div>
+	<hr>
+	<div id="resetButton">
+		<button type="button" id="reset" class="btn btn-secondary typeButton">New Puzzle</span></button>
 	</div>
 	<br>
-	<hr><br>
-
-	<div class="centered">
-	<div class="btn-group btn-group-lg " role="group"> 
-  	<button type="button" id="easy" class="puzzleTypeBtn btn btn-primary">easy</button>
-  	<button type="button" id="tricky" class="puzzleTypeBtn btn btn-secondary">tricky</button>
-  	<button type="button" id="trickier" class="puzzleTypeBtn btn btn-secondary">trickier</button>
- 	</div>
-	</div>
-
-<h3>
-<div id="accusationDisplay"></div>	
-<hr>
-<br>
-<p>
-Next to the name of each islander, check off the ones that you think are knaves. When you think you have the correct list, click the 'solve' button to see if have solved the puzzle.
-</p>
-
-<hr>
-<h3>
-<div id="islandersDisplay"></div>
-</h3>
-<div id="soveButton">
-	<button type="button" id="solve" class="btn btn-secondary typeButton">Solve</span></button>
-</div>
-<span class='padSpan'></span>
-<div id="solutionDisplay"></div>
-<hr>
-<div id="resetButton">
-	<button type="button" id="reset" class="btn btn-secondary typeButton">New Puzzle</span></button>
-</div>
+	<br>
 
 </div>
 	<div class='col-sm-1'></div>
