@@ -3,8 +3,6 @@ Another JavaScript learning project. A live example can be found [here](https://
 
 The page and scripts in "knaves" generate interactive "knights and knave" puzzles, as found in “What is the Name of this Book?” by Raymond M. Smullyan. 
 
-See [this blog post](http://www.mathrecreation.com/2017/11/the-island-of-knights-and-knaves.html) for more about the knight and knave problems that these scripts generate.
-
 Code in the knaves repo generates problems where all the islanders are knights or knaves, the puzzles are always completely solvable, and the statements made by knights and knaves are restricted to three basic types (Accusaions/Affirmations, Sympathetic/Antithetic, and "Knave Conjunctions"), as described in the blog post. 
 
 There are a variety of puzzle 'topologies' generated for each difficulty selection - a large number of distinct puzzles are possible.
