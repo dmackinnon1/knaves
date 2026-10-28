@@ -30,16 +30,21 @@ In an accusation, an islander A says something like "B is a knave" or an equival
 
 Unfortunately, we don't know if A is telling the truth or not, so how can we know if what they are saying about B is true or not? Even without knowing the type of A, we can learn something very helpful about A and B from these statements. If A and B are linked by an accusation, they must be of different types: either A is a knave and B is a knight, or vice versa. If A and B are linked by an affirmation, they must be of the same type: either both are knights, or both are knaves. See if you can reason out why this must be so.
 
+### Knave Disjunctions
+We're calling statements situations like "A says: B is a knight, or I am a knave" a "knave disjunction."
+
+These are very helpful statements, as they always tell us the type of both the speaker and the spoken-of. Any islander who says "X or I am a knave" will be making a statement that must be, overall, truthful and is therefore a knight, and the statement X must be true. This is because, if the the overall statement "X or I am a knave" is false, then the speaker would be a knave, making the statement true (the Liar paradox). So for these statements, we know they must overall be true. Since the second part of the statement is false ("I am a knave") we know that the first part of the statement X is the true part.
+
+- When A says "B is a knight, or I am a knave" we know that both A and B must be knights.
+- When A says "C is a knave, or I am a knave" we know that A is a knight and C is a knave.
+
 ### Knave Conjunctions
-An example of a knave conjunction, is when A says "B is a knight, or I am a knave," or &nbsp;"C is a knave and I am a knave."
+We're calling statements situations like "A says: B is a knight, and I am a knave" a "knave conjunction."
 
-These are very helpful statements, as they always tell us the type of both the speaker and the spoken-of. Any islander who says "or I am a knave" will be making a statement that must be, overall, truthful and is therefore a knight, while any islander who says "and I am a knave" will by lying, and must be knave. Try and convince yourself of that.<br />
+Like knave disjunctions, these are helpful statements. Any islander who says "X and I am a knave" will be making a statement that must be, overall, false and is therefore a knave, and the statement X must be false. This is because, if the the overall statement "X and I am a knave" is true, then the speaker would be a knave, making the statement false (the Liar paradox). So for these statements, we know they must overall be false. Since the second part of the statement is true ("I am a knave") we know that the first part of the statement X is the false part.
 
-An interesting thing about "knave conjunctions" is that their usefulness comes from how close they are to the <a href="https://en.wikipedia.org/wiki/Liar_paradox">liar paradox</a>. The liar paradox is a more self-directed refinement of that original statement of Epimenides, where we imagine that someone says: "I am lying" and wonder if they are telling the truth or not.
-
-An islander cannot make the statement "I am lying," or any equivalent statement such as "I am a knave." If such a statement is true, then the speaker is lying, making the statement also false; and if it is false, the speaker is lying, making the statement also true. So such a statement is contradictory - neither false or true, and our islanders are restricted to statements that are either true or false.
-
-Islanders, however, can get close to generating the liar paradox by including its statement as a clause along with another statement. To see how they can do this, you have to be clear on how statements that include "and" and "or" work. If someone on the island says "X or Y" then only X or Y has to be true in order for the whole statement to be true. So a knight can say "X or Y" when only one of the statements is true. However, if a knave says "X or Y" then both X and Y must be false (if one was true, the whole statement would be true, and a knave cannot make a true statement). If an islander says "X and Y" then both X and Y have to be true in order for the statement to be true, and only one needs to be false for the statement to be false. So a knave can say "X and Y" when only one of the statements is false.
+- When A says "B is a knight, and I am a knave" we know that both A and B must be knaves.
+- When A says "C is a knave, or I am a knave" we know that A is a knave and C is a knight.
 
 ### Affinity and antipathy statements
 Sometimes an islander A might say "B is my type" or maybe "C is not my type." We might not know if A is a knight or knave, but we can infer the type of B and C right away. No matter whether A is lying or telling the truth, if A claims "B is my type," then B must be a knight. On the other hand, if A claims that "C is not my type" we know that C is a knave. Do you agree?
