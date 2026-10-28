@@ -62,4 +62,4 @@ A fun and helpful way to visualize the groups is to form an "accusation graph". 
 
 <img width="379" height="335" alt="graph1" src="https://github.com/user-attachments/assets/883bad35-2f58-4ec0-9bed-1cd49feece4e" />
 
-The accusation graph shows the distinct groups of islanders, but doesn't tell us which group is witch. This particular puzzle requires one more statement, perhaps a Knave conjunction or affinity/antipathy statement to decide which colour represents the knights and which colour represents the knaves.
+The accusation graph shows the distinct groups of islanders, but doesn't tell us which group is witch.  We know that A, B, and D are the same type and C is a different type, but we don't know which grouping are knaves vs. knights. This particular puzzle requires one more statement, perhaps a Knave disjunction or conjunction or an affinity/antipathy statement to decide which colour represents the knights and which colour represents the knaves.
