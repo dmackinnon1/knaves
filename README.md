@@ -25,12 +25,12 @@ If you wish, you can the reasoning behind a possible solution.
 ## Statement types
 There are many varieties of statements that knights and knaves can make. In the puzzles generated here, there are only a few types of statements.
 
-### Accusations and Affirmations
+### Accusations and affirmations
 In an accusation, an islander A says something like "B is a knave" or an equivalent statement like "B always lies." In an affirmation, islander A says something like "B is a knight" or "B always tells the truth."<br />
 
 Unfortunately, we don't know if A is telling the truth or not, so how can we know if what they are saying about B is true or not? Even without knowing the type of A, we can learn something very helpful about A and B from these statements. If A and B are linked by an accusation, they must be of different types: either A is a knave and B is a knight, or vice versa. If A and B are linked by an affirmation, they must be of the same type: either both are knights, or both are knaves. See if you can reason out why this must be so.
 
-### Knave Disjunctions
+### Knave disjunctions
 We're calling statements situations like "A says: B is a knight, or I am a knave" a "knave disjunction."
 
 These are very helpful statements, as they always tell us the type of both the speaker and the spoken-of. Any islander who says "X or I am a knave" will be making a statement that must be, overall, truthful and is therefore a knight, and the statement X must be true. This is because, if the the overall statement "X or I am a knave" is false, then the speaker would be a knave, making the "I am a knave" part of the statement true, contradicting the falsity of the overall statement. So for these, we know the combined statement must be true and the speaker must be a knight. Since the second part of the statement is false ("I am a knave") we know that the first part of the statement X is the true part.
@@ -38,7 +38,7 @@ These are very helpful statements, as they always tell us the type of both the s
 - When A says "B is a knight, or I am a knave" we know that both A and B must be knights.
 - When A says "C is a knave, or I am a knave" we know that A is a knight and C is a knave.
 
-### Knave Conjunctions
+### Knave conjunctions
 We're calling statements situations like "A says: B is a knight, and I am a knave" a "knave conjunction."
 
 Like knave disjunctions, these are helpful statements. Any islander who says "X and I am a knave" will be making a statement that must be, overall, false. This makes the speaker a knave, and forces the first part of the statement to be false as well. This is because, if the the overall statement "X and I am a knave" is true we get a contradiction: the speaker must be a knave for making a false statement, but then the conjunction would be true as they are saying "I am a knave." So for these statements, we know the overall statement must be false. Since the second part of the statement is true ("I am a knave") we know that the first part of the statement X is the false part.
